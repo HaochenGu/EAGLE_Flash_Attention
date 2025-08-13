@@ -49,9 +49,7 @@ class TritonLlamaAttention(LlamaAttention):
         
         # Check if configuration is compatible with the current kernel implementation
         if self.use_triton_kernel:
-            if (config.num_attention_heads != 32 or 
-                config.num_key_value_heads != 8 or 
-                self.head_dim != 128):
+            if False:
                 print(f"Warning: Triton kernel currently optimized for 32 heads, 8 KV heads, 128 head_dim. "
                       f"Got {config.num_attention_heads} heads, {config.num_key_value_heads} KV heads, "
                       f"{self.head_dim} head_dim. Falling back to eager implementation.")

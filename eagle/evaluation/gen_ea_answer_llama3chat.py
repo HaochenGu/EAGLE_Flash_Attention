@@ -420,7 +420,23 @@ if __name__ == "__main__":
     for k,v in vars(args).items():
         print(f"{k}={v}")
 
-    args.model_id = args.model_id + "-temperature-" + str(args.temperature)
+    # Build model ID with all relevant parameters
+    model_id_parts = [
+        args.model_id,
+        f"temp-{args.temperature}",
+        f"total_token-{args.total_token}",
+        f"depth-{args.depth}",
+        f"topk-{args.top_k}"
+    ]
+    
+    # Add flash attention status
+    if args.use_flash_attention:
+        model_id_parts.append("flash_attn-True")
+    else:
+        model_id_parts.append("flash_attn-False")
+    
+    args.model_id = "-".join(model_id_parts)
+    
     if args.num_gpus_total // args.num_gpus_per_model > 1:
         import ray
 

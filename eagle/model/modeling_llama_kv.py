@@ -11,7 +11,6 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from .triton_llama_attention import TritonLlamaAttention
 
 # [MODIFIED] Import from transformer library
 from transformers.activations import ACT2FN
@@ -793,6 +792,7 @@ class LlamaDecoderLayer(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         if config.use_flash_attention:
+            from .triton_llama_attention import TritonLlamaAttention
             self.self_attn = TritonLlamaAttention(config=config)
         else:
             self.self_attn = LlamaAttention(config=config)
