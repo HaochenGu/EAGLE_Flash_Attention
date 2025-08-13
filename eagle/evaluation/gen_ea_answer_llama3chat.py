@@ -113,6 +113,7 @@ def get_model_answers(
         # load_in_8bit=True,
         device_map="auto",
         use_eagle3=args.use_eagle3,
+        use_flash_attention=args.use_flash_attention,
     )
 
     tokenizer = model.get_tokenizer()
@@ -407,6 +408,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--use_eagle3",
         action="store_true"
+    )
+    parser.add_argument(
+        "--use_flash_attention",
+        action="store_true",
+        help="Enable Flash Attention (Triton kernel) for verification stage"
     )
 
     args = parser.parse_args()

@@ -95,10 +95,19 @@ class EaModel(nn.Module):
             depth=7,
             top_k=10,
             threshold=1.0,
+            use_flash_attention=False,
             **kwargs,
     ):
         # assert Type=="LLaMA" or "Mixtral"
         Type = AutoConfig.from_pretrained(base_model_path).architectures[0]
+        
+        # Set Flash Attention configuration
+        config = AutoConfig.from_pretrained(base_model_path)
+        config.use_flash_attention = use_flash_attention
+        kwargs['config'] = config
+        
+        if use_flash_attention:
+            print(f"Flash Attention enabled for model type: {Type}")
 
         if Type == 'LlamaForCausalLM':
             base_model = KVLlamaForCausalLM.from_pretrained(
