@@ -3,26 +3,21 @@ import triton
 import triton.language as tl
 import math
 
-hidden_size = 4096
-num_heads = 32
-num_kv_heads = 8
-head_dim = 128
-# Test with the failing configuration that caused OutOfResources
-seq_len = 2048
-verify_len = 1024
+# Default configuration for LLaMA 3.1 8B
+# hidden_size = 4096
+# num_heads = 32
+# num_kv_heads = 8
+# head_dim = 128
 
-# bs is assumed to be 1, seq_len is the length of K/V cache, verify_len is the length of the draft tokens to be verified. No support of backward pass is needed.
-
-Q = torch.randn(1, num_heads, verify_len, head_dim)
-K = torch.randn(1, num_kv_heads, seq_len+verify_len, head_dim)  # Fixed: num_kv_heads for GQA
-V = torch.randn(1, num_kv_heads, seq_len+verify_len, head_dim)  # Fixed: num_kv_heads for GQA
-
-# Create tree_mask with 0 for visible positions and -inf for masked positions
-tree_mask = torch.zeros(1, verify_len, seq_len + verify_len, dtype=torch.float32)
-# For cached tokens (seq_len), all are visible (0)
-# For new tokens, apply tree structure mask
-random_mask = torch.rand(1, verify_len, verify_len) > 0.5
-tree_mask[:, :, seq_len:] = torch.where(random_mask, float('-inf'), 0.0)  # -inf for masked, 0 for visible
+# Test configuration (commented out to avoid execution on import)
+# seq_len = 2048
+# verify_len = 1024
+# Q = torch.randn(1, num_heads, verify_len, head_dim)
+# K = torch.randn(1, num_kv_heads, seq_len+verify_len, head_dim)
+# V = torch.randn(1, num_kv_heads, seq_len+verify_len, head_dim)
+# tree_mask = torch.zeros(1, verify_len, seq_len + verify_len, dtype=torch.float32)
+# random_mask = torch.rand(1, verify_len, verify_len) > 0.5
+# tree_mask[:, :, seq_len:] = torch.where(random_mask, float('-inf'), 0.0)
 
 
 def select_optimal_tile_sizes(verify_len, total_seq_len, num_heads=32, num_sms=132, head_dim=128):
@@ -392,6 +387,14 @@ def pytorch_attention_baseline(
 # Example usage and testing
 if __name__ == "__main__":
     import time
+    
+    # Test configuration
+    hidden_size = 4096
+    num_heads = 32
+    num_kv_heads = 8
+    head_dim = 128
+    seq_len = 2048
+    verify_len = 1024
     
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

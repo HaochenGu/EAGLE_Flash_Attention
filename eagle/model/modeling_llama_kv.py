@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from triton_llama_attention import TritonLlamaAttention
+from .triton_llama_attention import TritonLlamaAttention
 
 # [MODIFIED] Import from transformer library
 from transformers.activations import ACT2FN
