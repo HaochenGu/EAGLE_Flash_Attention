@@ -34,6 +34,7 @@ class EaModel(nn.Module):
             depth,
             top_k,
             threshold,
+            depth_scale,
             ea_layer_state_dict,
     ):
 
@@ -54,7 +55,7 @@ class EaModel(nn.Module):
             bias = True
         if use_eagle3:
             self.ea_layer = Model(config, bias=bias, total_tokens=total_token, depth=depth, top_k=top_k,
-                                  threshold=threshold, path=base_model_name_or_path,load_emb=True)
+                                  threshold=threshold, depth_scale=depth_scale, path=base_model_name_or_path,load_emb=True)
         else:
             self.ea_layer = Model1(config, bias=bias, total_tokens=total_token, depth=depth, top_k=top_k,
                                   threshold=threshold, path=base_model_name_or_path,load_emb=True)
@@ -95,6 +96,7 @@ class EaModel(nn.Module):
             depth=7,
             top_k=10,
             threshold=1.0,
+            depth_scale=1.0,
             use_flash_attention=False,
             **kwargs,
     ):
@@ -151,6 +153,7 @@ class EaModel(nn.Module):
             depth,
             top_k,
             threshold,
+            depth_scale,
             ea_layer_state_dict
         )
 

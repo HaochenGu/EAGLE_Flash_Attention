@@ -108,6 +108,7 @@ def get_model_answers(
         total_token=args.total_token,
         depth=args.depth,
         top_k=args.top_k,
+        depth_scale=args.depth_scale,
         torch_dtype=torch.float16,
         low_cpu_mem_usage=True,
         # load_in_8bit=True,
@@ -372,6 +373,12 @@ if __name__ == "__main__":
         default=10,
         help="The maximum number of drafted tokens in each layer.",
     )
+    parser.add_argument(
+        "--depth-scale",
+        type=float,
+        default=1.0,
+        help="Scale factor for depth-based scoring (>1 boosts deeper tokens, <1 penalizes them).",
+    )
 
     parser.add_argument(
         "--num-choices",
@@ -428,6 +435,10 @@ if __name__ == "__main__":
         f"depth-{args.depth}",
         f"topk-{args.top_k}"
     ]
+    
+    # Add depth_scale if it's not the default value
+    if args.depth_scale != 1.0:
+        model_id_parts.append(f"depth_scale-{args.depth_scale}")
     
     # Add flash attention status
     if args.use_flash_attention:

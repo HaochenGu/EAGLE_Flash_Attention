@@ -54,6 +54,11 @@ def parse_config_from_filename(filename):
     if topk_match:
         config['top_k'] = topk_match.group(1)
     
+    # Extract depth_scale
+    depth_scale_match = re.search(r'depth_scale-([0-9.]+)', filename)
+    if depth_scale_match:
+        config['depth_scale'] = depth_scale_match.group(1)
+    
     # Extract flash attention
     flash_match = re.search(r'flash_attn-(True|False|true|false)', filename)
     if flash_match:
@@ -100,8 +105,8 @@ def main():
     baseline_speed = calculate_speed(JSONL_FILE_BASE, tokenizer)
     
     # Print header
-    print(f"{'use_flash_attention':<20} {'topK':<10} {'depth':<10} {'total_token':<15} {'speed ratio':<15}")
-    print("-" * 80)
+    print(f"{'use_flash_attention':<20} {'topK':<10} {'depth':<10} {'depth_scale':<12} {'total_token':<15} {'speed ratio':<15}")
+    print("-" * 92)
     
     # Process each EAGLE file
     for jsonl_file in JSONL_FILES:
@@ -120,9 +125,10 @@ def main():
         flash = config.get('use_flash_attention', 'Unknown')
         topk = config.get('top_k', 'Unknown')
         depth = config.get('depth', 'Unknown')
+        depth_scale = config.get('depth_scale', '1.0')  # Default to 1.0 if not specified
         total_token = config.get('total_token', 'Unknown')
         
-        print(f"{flash:<20} {topk:<10} {depth:<10} {total_token:<15} {speed_ratio:.2f}")
+        print(f"{flash:<20} {topk:<10} {depth:<10} {depth_scale:<12} {total_token:<15} {speed_ratio:.2f}")
 
 
 if __name__ == "__main__":

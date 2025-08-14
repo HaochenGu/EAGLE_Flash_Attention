@@ -476,7 +476,7 @@ def len_list(x, n):
 
 
 class Model(nn.Module):
-    def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=5, top_k=8, threshold=1.0):
+    def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=5, top_k=8, threshold=1.0, depth_scale=1.0):
         super().__init__()
         self.config=config
         self.gradient_checkpointing = True
@@ -522,6 +522,8 @@ class Model(nn.Module):
         self.total_tokens = total_tokens - 1
         self.depth = depth
         self.threshold = math.log(threshold)
+        self.depth_scale = depth_scale  # Scale factor for depth-based scoring
+        self.log_depth_scale = math.log(depth_scale) if depth_scale > 0 else 0  # Pre-compute log for efficiency
         # print("total_tokens",total_tokens)
         # print("depth",depth)
         # print("top_k",top_k)
@@ -702,7 +704,14 @@ class Model(nn.Module):
         last_p = self.logsoftmax(last_headout)
         top = torch.topk(last_p, top_k, dim=-1)
         topk_index, topk_p = top.indices, top.values
-        scores = topk_p[0]
+        # Apply depth scaling to initial tokens (depth=1)
+        # Ensure scores remain valid log probabilities (<= 0)
+        base_scores = topk_p[0]
+        depth_bonus = self.log_depth_scale
+        # Bound the bonus to ensure scores <= 0
+        max_bonus = -base_scores.max().item() if base_scores.max() < 0 else 0
+        actual_bonus = min(depth_bonus, max_bonus)
+        scores = base_scores + actual_bonus
         scores_list.append(scores[None])
         parents_list.append(torch.zeros(1, dtype=torch.long, device=scores.device))
         if self.config.vocab_size==self.config.draft_vocab_size:
@@ -737,7 +746,25 @@ class Model(nn.Module):
             top = torch.topk(last_p, top_k, dim=-1)
             topk_index, topk_p = top.indices, top.values
 
-            cu_scores = topk_p + scores[:, None]
+            # Apply depth scaling: add depth * log(scale) to boost deeper tokens
+            # Current depth is (i + 2) since we start from depth 1 after initial tokens
+            current_depth = i + 2
+            
+            # Compute base cumulative scores (parent + child log probs)
+            base_cu_scores = topk_p + scores[:, None]
+            
+            # Apply depth bonus but ensure final scores remain <= 0 (valid log probs)
+            # and children don't exceed parent scores
+            depth_bonus = current_depth * self.log_depth_scale
+            
+            # Ensure the final score with bonus doesn't exceed 0
+            # cu_scores = base_cu_scores + depth_bonus, but we need cu_scores <= 0
+            # So depth_bonus must be <= -base_cu_scores.max()
+            max_bonus = -base_cu_scores.max().item() if base_cu_scores.max() < 0 else 0
+            actual_bonus = min(depth_bonus, max_bonus)
+            
+            # Now compute cumulative scores with the bounded depth bonus
+            cu_scores = base_cu_scores + actual_bonus
 
             topk_cs = torch.topk(cu_scores.view(-1), top_k, dim=-1)
             topk_cs_index, topk_cs_p = topk_cs.indices, topk_cs.values
