@@ -388,7 +388,12 @@ class LlamaDecoderLayeremb(nn.Module):
     def __init__(self, config, last=True):
         super().__init__()
         self.hidden_size = config.hidden_size
-        self.self_attn = LlamaAttention(config=config)
+        # Use Flash Attention if configured
+        if hasattr(config, 'use_flash_attention') and config.use_flash_attention:
+            from .triton_eagle_attention import TritonEagleAttention
+            self.self_attn = TritonEagleAttention(config=config)
+        else:
+            self.self_attn = LlamaAttention(config=config)
         self.mlp = LlamaMLP(config)
         self.last = last
         # self.fc = nn.Linear(config.hidden_size * 2, config.hidden_size)

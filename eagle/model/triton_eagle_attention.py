@@ -22,8 +22,8 @@ import torch.nn.functional as F
 from typing import Optional, Tuple
 import math
 
-# Import the flash attention kernel and launcher
-from .flash_mask_attention import flash_mask_attention_kernel, launch_attention_h100
+# Import the flash attention kernel and launcher (using tensor core version)
+from .flash_mask_attention import flash_mask_attention_kernel, launch_attention_h100_tensor_core as launch_attention_h100
 
 # Import base components from cnets (draft model)
 from .cnets import (
